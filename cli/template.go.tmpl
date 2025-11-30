@@ -1,0 +1,19 @@
+package main
+
+import (
+	"fmt"
+
+	"github.com/robryanx/adventofcode{{.Year}}/util"
+)
+
+func main() {
+	lines, err := util.ReadStrings({{if ge .Year 2024}}"{{.Day}}"{{else}}{{.Day}}{{end}}, false, "\n")
+	if err != nil {
+		panic(err)
+	}
+
+	for line := range lines {
+		fmt.Println(line)
+	}
+}
+

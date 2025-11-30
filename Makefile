@@ -1,0 +1,3 @@
+testall:
+	go test ./...
+.PHONY: testall
