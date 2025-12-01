@@ -14,10 +14,9 @@ import (
 type Iterator = func(s []byte)
 
 func filename(dayPart string, isSample bool) string {
-	yearDir := detectYearDir()
-	folder := filepath.Join(yearDir, "inputs")
+	folder := filepath.Join("inputs")
 	if isSample {
-		folder = filepath.Join(yearDir, "samples")
+		folder = filepath.Join("samples")
 	}
 
 	_, fileName, _, ok := runtime.Caller(0)
@@ -28,35 +27,6 @@ func filename(dayPart string, isSample bool) string {
 	basePath := filepath.Join(prefixPath, "..", folder)
 
 	return filepath.Join(basePath, fmt.Sprintf("%s.txt", dayPart))
-}
-
-func detectYearDir() string {
-	const defaultYear = "2024"
-	for skip := 2; skip < 10; skip++ {
-		if _, fileName, _, ok := runtime.Caller(skip); ok {
-			if year := extractYear(fileName); year != "" {
-				return year
-			}
-		} else {
-			break
-		}
-	}
-	return defaultYear
-}
-
-func extractYear(path string) string {
-	parts := strings.Split(filepath.ToSlash(path), "/")
-	for i := len(parts) - 1; i >= 0; i-- {
-		if parts[i] == "days" && i > 0 {
-			candidate := parts[i-1]
-			if len(candidate) == 4 {
-				if _, err := strconv.Atoi(candidate); err == nil {
-					return candidate
-				}
-			}
-		}
-	}
-	return ""
 }
 
 func ReadBytes(dayPart string, isSample bool) ([]byte, error) {
