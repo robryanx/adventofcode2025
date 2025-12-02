@@ -29,16 +29,23 @@ func main() {
 		}
 
 		for i := start; i <= end; i++ {
-			strNum := strconv.Itoa(i)
-			for j := 2; j <= len(strNum); j++ {
-				if len(strNum)%j == 0 {
+			l := numLen(i)
+			for j := 2; j <= l; j++ {
+				if l%j == 0 {
 					matched := true
-					curr := strNum[:len(strNum)/j]
-					for k := len(strNum) / j; k < len(strNum); k += len(strNum) / j {
-						if curr != strNum[k:k+len(strNum)/j] {
-							matched = false
-							break
+					match := top(i, l-l/j)
+					if match == bottom(i, l/j) {
+						if j > 2 {
+							for k := l / j; k < l-l/j; k += l / j {
+								next := bottom(top(i, (l-k-l/j)), l/j)
+								if next != match {
+									matched = false
+									break
+								}
+							}
 						}
+					} else {
+						matched = false
 					}
 
 					if matched {
@@ -51,4 +58,33 @@ func main() {
 	}
 
 	fmt.Println(total)
+}
+
+func top(num int, places int) int {
+	for places > 0 {
+		num /= 10
+		places--
+	}
+
+	return num
+}
+
+func bottom(num int, places int) int {
+	c := 1
+	for places > 0 {
+		c *= 10
+		places--
+	}
+
+	return num % c
+}
+
+func numLen(num int) int {
+	count := 0
+	for num > 0 {
+		count++
+		num /= 10
+	}
+
+	return count
 }
