@@ -34,7 +34,7 @@ func main() {
 		tEnd := top(end, lEnd-lEnd/2)
 
 		for i := tStart; i <= tEnd; i++ {
-			j := join(i, i)
+			j := join(i, 2)
 			if j >= start && j <= end {
 				total += j
 			}
@@ -53,24 +53,21 @@ func top(num int, places int) int {
 	return num
 }
 
-func bottom(num int, places int) int {
-	c := 1
-	for places > 0 {
-		c *= 10
-		places--
+func join(num, times int) int {
+	total := 0
+	numL := numLen(num)
+
+	for i := numL * times; i > 0; i -= numL {
+		tempNum := num
+		places := i - numL
+		for places > 0 {
+			tempNum *= 10
+			places--
+		}
+		total += tempNum
 	}
 
-	return num % c
-}
-
-func join(upper, lower int) int {
-	places := numLen(lower)
-	for places > 0 {
-		upper *= 10
-		places--
-	}
-
-	return upper + lower
+	return total
 }
 
 func numLen(num int) int {

@@ -28,29 +28,38 @@ func main() {
 			panic(err)
 		}
 
-		for i := start; i <= end; i++ {
-			l := numLen(i)
-			for j := 2; j <= l; j++ {
-				if l%j == 0 {
-					matched := true
-					match := top(i, l-l/j)
-					if match == bottom(i, l/j) {
-						if j > 2 {
-							for k := l / j; k < l-l/j; k += l / j {
-								next := bottom(top(i, (l-k-l/j)), l/j)
-								if next != match {
-									matched = false
-									break
-								}
-							}
-						}
-					} else {
-						matched = false
-					}
+		var ranges [][3]int
+		curr := start
+		for curr < end {
+			currL := numLen(curr)
+			next := nextLenFirst(currL)
 
-					if matched {
-						total += i
-						break
+			if next > end {
+				ranges = append(ranges, [3]int{currL, curr, end})
+			} else {
+				ranges = append(ranges, [3]int{currL, curr, next - 1})
+			}
+
+			curr = next
+		}
+
+		for _, r := range ranges {
+			repeat := map[int]struct{}{}
+			for i := 2; i <= r[0]; i++ {
+				if r[0]%i == 0 {
+					checkStart := top(r[1], r[0]-r[0]/i)
+					checkEnd := top(r[2], r[0]-r[0]/i)
+
+					for j := checkStart; j <= checkEnd; j++ {
+						check := join(j, i)
+						if check >= start && check <= end {
+							if _, ok := repeat[check]; ok {
+								continue
+							}
+
+							total += check
+							repeat[check] = struct{}{}
+						}
 					}
 				}
 			}
@@ -58,6 +67,23 @@ func main() {
 	}
 
 	fmt.Println(total)
+}
+
+func join(num, times int) int {
+	total := 0
+	numL := numLen(num)
+
+	for i := numL * times; i > 0; i -= numL {
+		tempNum := num
+		places := i - numL
+		for places > 0 {
+			tempNum *= 10
+			places--
+		}
+		total += tempNum
+	}
+
+	return total
 }
 
 func top(num int, places int) int {
@@ -69,14 +95,14 @@ func top(num int, places int) int {
 	return num
 }
 
-func bottom(num int, places int) int {
+func nextLenFirst(l int) int {
 	c := 1
-	for places > 0 {
+	for l > 0 {
 		c *= 10
-		places--
+		l--
 	}
 
-	return num % c
+	return c
 }
 
 func numLen(num int) int {
