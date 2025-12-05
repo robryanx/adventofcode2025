@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	lines, err := util.ReadStrings({{if ge .Year 2024}}"{{.Day}}"{{else}}{{.Day}}{{end}}, false, "\n")
+	lines, err := util.ReadStrings({{if ge .Year 2024}}"{{.Day}}-1"{{else}}{{.Day}}{{end}}, true, "\n")
 	if err != nil {
 		panic(err)
 	}
