@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"slices"
+	"iter"
 	"strconv"
 	"strings"
 
@@ -10,12 +10,20 @@ import (
 )
 
 func main() {
+	fmt.Println(solution(load()))
+}
+
+func load() iter.Seq[string] {
 	lines, err := util.ReadStrings("5", false, "\n")
 	if err != nil {
 		panic(err)
 	}
 
-	ranges := [][2]int{}
+	return lines
+}
+
+func solution(lines iter.Seq[string]) int {
+	ranges := make([][2]int, 0, 100)
 	for line := range lines {
 		if line == "" {
 			break
@@ -51,9 +59,26 @@ func main() {
 						break
 					}
 				}
-				next := slices.Clone(ranges[pos:])
-				ranges = append(ranges[:i], [2]int{start, end})
-				ranges = append(ranges, next...)
+
+				switch i - pos {
+				case -1:
+					ranges[i] = [2]int{start, end}
+				case 0:
+					ranges = append(ranges, [2]int{})
+					for j := len(ranges) - 1; j > pos; j-- {
+						ranges[j] = ranges[j-1]
+					}
+					ranges[i] = [2]int{start, end}
+				default:
+					diff := i - pos
+					for j := i + 1; j < len(ranges)+diff+1; j++ {
+						ranges[j] = ranges[pos]
+						pos++
+					}
+					ranges[i] = [2]int{start, end}
+					ranges = ranges[:len(ranges)+diff+1]
+				}
+
 				found = true
 				break
 			}
@@ -69,5 +94,5 @@ func main() {
 		total += r[1] - r[0] + 1
 	}
 
-	fmt.Println(total)
+	return total
 }

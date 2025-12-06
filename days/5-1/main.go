@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"iter"
 	"strconv"
 	"strings"
 
@@ -9,11 +10,19 @@ import (
 )
 
 func main() {
+	fmt.Println(solution(load()))
+}
+
+func load() iter.Seq[string] {
 	lines, err := util.ReadStrings("5", false, "\n")
 	if err != nil {
 		panic(err)
 	}
 
+	return lines
+}
+
+func solution(lines iter.Seq[string]) int {
 	ranges := [][2]int{}
 	total := 0
 
@@ -52,5 +61,5 @@ func main() {
 		}
 	}
 
-	fmt.Println(total)
+	return total
 }
