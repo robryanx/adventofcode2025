@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"iter"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -66,49 +65,44 @@ func solution(lines iter.Seq[string]) int {
 	}
 
 	// precompute distances
-	distances := []distance{}
+	distances := make([]distance, 0, len(points)*len(points))
 	for i := 0; i < len(points); i++ {
 		for j := i + 1; j < len(points); j++ {
-			dist := (points[i].x-points[j].x)*(points[i].x-points[j].x) +
-				(points[i].y-points[j].y)*(points[i].y-points[j].y) +
-				(points[i].z-points[j].z)*(points[i].z-points[j].z)
+			distX := points[i].x - points[j].x
+			distY := points[i].y - points[j].y
+			distZ := points[i].z - points[j].z
 
 			distances = append(distances, distance{
 				a:        points[i],
 				b:        points[j],
-				distance: dist,
+				distance: (distX * distX) + (distY * distY) + (distZ * distZ),
 			})
 		}
 	}
 
-	slices.SortFunc(distances, func(a, b distance) int {
-		if a.distance < b.distance {
-			return -1
-		} else if a.distance > b.distance {
-			return 1
-		}
-
-		return 0
+	pq := util.NewPriorityQueue(distances, func(a, b distance) bool {
+		return a.distance < b.distance
 	})
 
-	for i := 0; i < len(distances); i++ {
-		if distances[i].a.circuit == distances[i].b.circuit {
+	for {
+		dist, ok := pq.Pop()
+		if !ok {
+			return -1
+		}
+		if dist.a.circuit == dist.b.circuit {
 			continue
 		}
 
-		aCircuit := distances[i].a.circuit
-		bCircuit := distances[i].b.circuit
+		bCircuit := dist.b.circuit
 
 		for _, p := range circuits[bCircuit] {
-			p.circuit = aCircuit
-			circuits[aCircuit] = append(circuits[aCircuit], p)
+			p.circuit = dist.a.circuit
+			circuits[dist.a.circuit] = append(circuits[dist.a.circuit], p)
 		}
 		delete(circuits, bCircuit)
 
 		if len(circuits) == 1 {
-			return distances[i].a.x * distances[i].b.x
+			return dist.a.x * dist.b.x
 		}
 	}
-
-	return -1
 }

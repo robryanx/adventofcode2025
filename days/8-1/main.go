@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"iter"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -12,11 +11,16 @@ import (
 )
 
 type point struct {
-	x           int
-	y           int
-	z           int
-	circuit     int
-	connections []int
+	x       int
+	y       int
+	z       int
+	circuit int
+}
+
+type distance struct {
+	a        *point
+	b        *point
+	distance int
 }
 
 func main() {
@@ -33,7 +37,9 @@ func load() iter.Seq[string] {
 }
 
 func solution(lines iter.Seq[string]) int {
-	var points []point
+	var points []*point
+	circuits := map[int][]*point{}
+
 	circuit := 0
 	for line := range lines {
 		nums := strings.Split(line, ",")
@@ -53,61 +59,63 @@ func solution(lines iter.Seq[string]) int {
 			panic(err)
 		}
 
-		points = append(points, point{x, y, z, circuit, []int{}})
+		p := &point{x, y, z, circuit}
+		points = append(points, p)
+		circuits[circuit] = append(circuits[circuit], p)
 		circuit++
 	}
 
-	connections := 0
-	for connections < 1000 {
-		midDist := math.MaxInt
-		minPosA := -1
-		minPosB := -1
-		for i := 0; i < len(points); i++ {
-			for j := i + 1; j < len(points); j++ {
-				checkKey := points[j].x*100000000 + points[j].y*100000 + points[j].z
-				if slices.Contains(points[i].connections, checkKey) {
-					continue
-				}
+	// precompute distances
+	distances := make([]distance, 0, len(points)*len(points))
+	for i := 0; i < len(points); i++ {
+		for j := i + 1; j < len(points); j++ {
+			distX := points[i].x - points[j].x
+			distY := points[i].y - points[j].y
+			distZ := points[i].z - points[j].z
 
-				dist := (points[i].x-points[j].x)*(points[i].x-points[j].x) +
-					(points[i].y-points[j].y)*(points[i].y-points[j].y) +
-					(points[i].z-points[j].z)*(points[i].z-points[j].z)
-
-				if dist < midDist {
-					midDist = dist
-					minPosA = i
-					minPosB = j
-				}
-			}
-		}
-
-		if minPosA != -1 {
-			aCircuit := points[minPosA].circuit
-			bCircuit := points[minPosB].circuit
-
-			for i := 0; i < len(points); i++ {
-				if points[i].circuit == bCircuit {
-					points[i].circuit = aCircuit
-				}
-			}
-
-			points[minPosA].connections = append(points[minPosA].connections, points[minPosB].x*100000000+points[minPosB].y*100000+points[minPosB].z)
-			points[minPosB].connections = append(points[minPosB].connections, points[minPosA].x*100000000+points[minPosA].y*100000+points[minPosA].z)
-
-			connections++
+			distances = append(distances, distance{
+				a:        points[i],
+				b:        points[j],
+				distance: (distX * distX) + (distY * distY) + (distZ * distZ),
+			})
 		}
 	}
 
-	sizes := make([]int, len(points))
-	for i := 0; i < len(points); i++ {
-		count := 0
-		for j := 0; j < len(points); j++ {
-			if points[j].circuit == i {
-				count++
+	pq := util.NewPriorityQueue(distances, func(a, b distance) bool {
+		return a.distance < b.distance
+	})
+
+	connections := 0
+	for {
+		dist, ok := pq.Pop()
+		if !ok {
+			return -1
+		}
+		connections++
+		if dist.a.circuit == dist.b.circuit {
+			if connections == 1000 {
+				break
 			}
+
+			continue
 		}
 
-		sizes[i] = count
+		bCircuit := dist.b.circuit
+
+		for _, p := range circuits[bCircuit] {
+			p.circuit = dist.a.circuit
+			circuits[dist.a.circuit] = append(circuits[dist.a.circuit], p)
+		}
+		delete(circuits, bCircuit)
+
+		if connections == 1000 {
+			break
+		}
+	}
+
+	sizes := make([]int, 0, len(circuits))
+	for _, c := range circuits {
+		sizes = append(sizes, len(c))
 	}
 
 	slices.Sort(sizes)
