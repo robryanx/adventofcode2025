@@ -82,7 +82,7 @@ func (q *PriorityQueue[T]) Print() {
 
 func pow(base, exponent int) int {
 	total := 1
-	for i := 0; i < exponent; i++ {
+	for range exponent {
 		total *= base
 	}
 
@@ -103,12 +103,17 @@ func (q *PriorityQueue[T]) siftDown(current int) {
 		right := left + 1
 		smallest := current
 
+		// if the current is less than left we swap with the left
 		if left < len(q.data) && q.less(q.data[left], q.data[smallest]) {
 			smallest = left
 		}
+
+		// if the current is less than right we swap with the right
 		if right < len(q.data) && q.less(q.data[right], q.data[smallest]) {
 			smallest = right
 		}
+
+		// if neither if these cases we already have correct order
 		if smallest == current {
 			break
 		}
@@ -122,9 +127,13 @@ func (q *PriorityQueue[T]) siftDown(current int) {
 func (q *PriorityQueue[T]) siftUp(current int) {
 	for current > 0 {
 		parent := (current - 1) / 2
+
+		// if not less than the parent we have correct order
 		if !q.less(q.data[current], q.data[parent]) {
 			break
 		}
+
+		// otherwise swap and check parent
 		q.data[current], q.data[parent] = q.data[parent], q.data[current]
 		current = parent
 	}

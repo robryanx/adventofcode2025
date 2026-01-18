@@ -1,8 +1,10 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"iter"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -20,6 +22,63 @@ func load() iter.Seq[string] {
 	}
 
 	return lines
+}
+
+type event struct {
+	pos   int
+	delta int
+}
+
+func solutionEvents(lines iter.Seq[string]) int {
+	events := make([]event, 0, 1000)
+	for line := range lines {
+		if line == "" {
+			break
+		}
+
+		rangeParts := strings.Split(line, "-")
+		start, err := strconv.Atoi(rangeParts[0])
+		if err != nil {
+			panic(err)
+		}
+
+		end, err := strconv.Atoi(rangeParts[1])
+		if err != nil {
+			panic(err)
+		}
+
+		events = append(events, event{start, 1})
+		events = append(events, event{end + 1, -1})
+	}
+
+	slices.SortFunc(events, func(a, b event) int {
+		return cmp.Compare(a.pos, b.pos)
+	})
+
+	total := 0
+
+	currentActive := 0
+	start := 0
+
+	i := 0
+	for i < len(events) {
+		x := events[i].pos
+
+		// Apply all events at x (the count changes starting at x).
+		before := currentActive
+		for i < len(events) && events[i].pos == x {
+			currentActive += events[i].delta
+			i++
+		}
+
+		if before == 0 && currentActive > 0 {
+			start = x
+		} else if currentActive == 0 && before > 0 {
+			total += x - start
+		}
+	}
+
+	return total
 }
 
 func solution(lines iter.Seq[string]) int {
